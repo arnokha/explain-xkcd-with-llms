@@ -3,4 +3,4 @@
 !/inputs/prompts/*
 
 .DS_Store
-
+__pycache__
