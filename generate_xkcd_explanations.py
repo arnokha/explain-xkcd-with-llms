@@ -71,56 +71,6 @@ def replace_placeholders(text: str, replacements: Dict[str, str]) -> str:
         text = text.replace(key, value)
     return text
 
-# async def generate_openai_response(prompt: str) -> str:
-#     messages = [
-#         {"role": "user", "content": prompt}
-#     ]
-#     try:
-#         completion = await openai_client.chat.completions.create(
-#             messages=messages,
-#             model=MODEL_OPENAI,
-#             temperature=TEMPERATURE,
-#             max_tokens=MAX_TOKENS,
-#         )
-#         content = completion.choices[0].message.content
-#     except Exception as e:
-#         log.error(f"Error while requesting OpenAI chat completion: {e}")
-#         raise e
-    
-#     return str(content)
-
-# async def generate_anthropic_response(prompt: str) -> str:
-#     messages = [
-#         {"role": "user", "content": prompt}
-#     ]
-#     try:
-#         completion = await anthropic_client.messages.create(
-#             messages=messages,
-#             model=MODEL_ANTHROPIC,
-#             temperature=TEMPERATURE,
-#             max_tokens=MAX_TOKENS,
-#         )
-#         content = completion.content[0].text
-#     except Exception as e:
-#         log.error(f"Error while requesting Anthropic chat completion: {e}")
-#         raise e
-    
-#     return str(content)
-
-# async def generate_google_response(prompt: str) -> str:
-#     try:
-#         completion = await google_llm.generate_content_async(
-#             prompt,
-#             generation_config=google_llm.types.GenerationConfig(
-#                 temperature=TEMPERATURE,
-#                 max_output_tokens=MAX_TOKENS,
-#             )
-#         )
-#         content = completion.text
-#     except Exception as e:
-#         log.error(f"Error while requesting Google chat completion: {e}")
-#         raise e
-#     return str(content)
 
 async def generate_openai_response(prompt: str, image_info) -> str:
     messages = [
@@ -253,6 +203,7 @@ def read_xkcd_images_openai(path=IMAGES_PATH, start_index=XKCD_START_IDX):
             continue
     return images
 
+
 def read_xkcd_images_anthropic(path=IMAGES_PATH, start_index=XKCD_START_IDX):
     images = {}
     for filename in os.listdir(path):
@@ -320,6 +271,22 @@ def assemble_xkcd_data(xkcd_info_df, xkcd_explanations_df, xkcd_images):
             }
     return xkcd_data
 
+
+def extract_xml(response: str, tag: str):
+    opening_pattern = f"<{tag}[^>]*>"
+    closing_tag = f"</{tag}>"
+    
+    opening_match = re.search(opening_pattern, response)
+    
+    if not (opening_match and closing_tag in response):
+        log.warning("Unable to extract information for given tag (LLM likely did not follow response "
+                    "formatting instructions). Returning full response")
+        return response
+    else:
+        start_index = opening_match.end()
+        end_index = response.find(closing_tag, start_index)
+        content = response[start_index:end_index]
+        return content.strip()
 
 ##-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 ## Generate XKCD explanations
