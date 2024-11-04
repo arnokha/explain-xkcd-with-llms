@@ -3,11 +3,12 @@ Explain this comic.
 
 [Additional info]
 Title: {{TITLE}}
-Mouseover text for image: {{MOUSEOVER_TEXT}}
+Mouseover/tooltip text for image: {{MOUSEOVER_TEXT}}
 
 [Response Formating]
- I am providing a template for how to format your response
+ I am providing a template for how to format your response.
  Failure to respond with the response template will result in a parsing error and immediate disqualification.
+ Ensure the <explanation> is thorough, even if it repeats points made in <thinking>, as the response quality will be evaluated solely on the <explanation>.
 
 [Response Template]
 <thinking>
