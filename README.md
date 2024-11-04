@@ -1,3 +1,3 @@
 # explain-xkcd-with-llms
 
-images go in `images/xkcd_images` (refer to the [download repo](https://github.com/arnokha/download-xkcd-and-explanations)
+refer to the [download repo](https://github.com/arnokha/download-xkcd-and-explanations) for how to get `inputs/*`, including comic info, explanations, and images

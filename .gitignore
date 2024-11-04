@@ -1,3 +1,6 @@
-inputs
+/inputs/*
+!/inputs/prompts
+!/inputs/prompts/*
+
 .DS_Store
 
