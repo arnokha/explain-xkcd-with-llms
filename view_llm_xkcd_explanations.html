@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>XKCD LLM Explanations Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        #navigation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        #navigation span {
+            margin: 0 20px;
+            cursor: pointer;
+            font-size: 1.5em;
+        }
+        #navigation #date {
+            margin: 0 20px;
+            font-size: 1em;
+        }
+        #title {
+            text-align: center;
+            width: 100%;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+        #comic-container, #explanations-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        #comic-container img {
+            max-height: 100%;
+            max-width: 100%;
+        }
+        #mouseover-text {
+            text-align: center;
+            width: 100%;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+        #links {
+            text-align: center;
+            width: 100%;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+        #links a {
+            margin: 0 10px;
+            text-decoration: none;
+            color: blue;
+        }
+        #explanations {
+            text-align: center;
+            width: 80%;
+            margin-top: 10px;
+            padding: 0 20px;
+        }
+        #explanations h1 {
+            font-size: 1em;
+            margin-top: 20px;
+        }
+        #explanations p {
+            text-align: left;
+            font-size: 0.9em;
+        }
+    </style>
+
+</head>
+<body>
+    <div id="navigation">
+        <span id="first">&#171;-</span>
+        <span id="prev">&#8249;-</span>
+        <span id="date"></span>
+        <span id="next">-&#8250;</span>
+        <span id="last">-&#187;</span>
+    </div>
+    <div id="title"></div>
+    <div id="comic-container">
+        <img id="comic-image" src="" alt="Comic Image">
+    </div>
+    <div id="mouseover-text"></div>
+    <div id="links">
+        <a id="xkcd-link" href="" target="_blank">xkcd link</a>
+        <br>
+        <a id="explainxkcd-link" href="" target="_blank">explainxkcd link</a>
+    </div>
+    <div id="explanations-container">
+        <div id="explanations"></div>
+    </div>
+    
+
+    <script>
+        async function fetchJSONData() {
+            try {
+                // Fetch the JSON files from the FastAPI server
+                const [infoResponse, explanationsResponse, openaiResponse, anthropicResponse, googleResponse] = await Promise.all([
+                    fetch('/json/xkcd_comic.json'),
+                    fetch('/json/xkcd_explanations.json'),
+                    fetch('/json/openai_responses.json'),
+                    fetch('/json/anthropic_responses.json'),
+                    fetch('/json/google_responses.json')
+                ]);
+
+                const [xkcdInfo, xkcdExplanations, openaiResponses, anthropicResponses, googleResponses] = await Promise.all([
+                    infoResponse.json(),
+                    explanationsResponse.json(),
+                    openaiResponse.json(),
+                    anthropicResponse.json(),
+                    googleResponse.json()
+                ]);
+
+                return { xkcdInfo, xkcdExplanations, openaiResponses, anthropicResponses, googleResponses };
+            } catch (error) {
+                console.error('Error fetching JSON files:', error);
+            }
+        }
+
+        function parseData({ xkcdInfo, xkcdExplanations, openaiResponses, anthropicResponses, googleResponses }) {
+            // Construct a mapping from comic_index to data
+            const xkcdDataMap = {};
+
+            // Process xkcdInfo
+            xkcdInfo.forEach(info => {
+                const comicIndex = info['comic_index'];
+                xkcdDataMap[comicIndex] = {
+                    comic_index: comicIndex,
+                    title: info['Title'],
+                    img: info['Image URL'],
+                    alt: info['Mouseover text'],
+                    xkcd_url: info['URL'],
+                    llm_explanations: []
+                };
+            });
+
+            // Add explainxkcd data
+            xkcdExplanations.forEach(exp => {
+                const comicIndex = exp['comic_index'];
+                if (xkcdDataMap[comicIndex]) {
+                    xkcdDataMap[comicIndex].explainxkcd_url = exp['URL'];
+                    xkcdDataMap[comicIndex].date = exp['Publish date'];
+                    // xkcdDataMap[comicIndex].explainxkcd_explanation = exp['Explanation'];
+                }
+            });
+
+            // Helper function to add LLM explanations
+            function addLLMExplanations(responses, providerName) {
+                responses.forEach(res => {
+                    const comicIndex = res['comic_index'];
+                    if (xkcdDataMap[comicIndex]) {
+                        xkcdDataMap[comicIndex].llm_explanations.push({
+                            provider: providerName,
+                            explanation: res['explanation']
+                        });
+                    }
+                });
+            }
+
+            // Add LLM explanations
+            addLLMExplanations(openaiResponses, 'OpenAI gpt-4o-2024-08-06');
+            addLLMExplanations(anthropicResponses, 'Anthropic claude-3-5-sonnet-20241022');
+            addLLMExplanations(googleResponses, 'Google gemini-1.5-pro-002');
+
+            // Convert the mapping to an array
+            const xkcdDataArray = Object.values(xkcdDataMap);
+
+            // Sort the array by comic_index
+            xkcdDataArray.sort((a, b) => parseInt(a.comic_index) - parseInt(b.comic_index));
+
+            return xkcdDataArray;
+        }
+
+        // Initialize variables
+        let xkcdData = [];
+        let currentIndex = 0;
+
+        // Initialize the page
+        async function init() {
+            const jsonData = await fetchJSONData();
+            xkcdData = parseData(jsonData);
+            displayComic(currentIndex);
+            document.getElementById('first').addEventListener('click', () => navigate('first'));
+            document.getElementById('prev').addEventListener('click', () => navigate('prev'));
+            document.getElementById('next').addEventListener('click', () => navigate('next'));
+            document.getElementById('last').addEventListener('click', () => navigate('last'));
+        }
+
+        // Display the comic and explanations at the current index
+        function displayComic(index) {
+            const comic = xkcdData[index];
+            if (!comic) return;
+
+            document.getElementById('date').textContent = comic.date || '';
+            document.getElementById('title').textContent = comic.title || '';
+            document.getElementById('comic-image').src = comic.img || '';
+            document.getElementById('comic-image').alt = comic.title || '';
+            document.getElementById('mouseover-text').textContent = comic.alt || '';
+            document.getElementById('xkcd-link').href = comic.xkcd_url || '';
+            document.getElementById('explainxkcd-link').href = comic.explainxkcd_url || '';
+
+            // Clear previous explanations
+            const explanationsDiv = document.getElementById('explanations');
+            explanationsDiv.innerHTML = '';
+
+            // Display LLM explanations
+            if (comic.llm_explanations) {
+                comic.llm_explanations.forEach(exp => {
+                    const h1 = document.createElement('h1');
+                    h1.textContent = `${exp.provider} Explanation`;
+                    const p = document.createElement('p');
+                    p.textContent = exp.explanation;
+                    explanationsDiv.appendChild(h1);
+                    explanationsDiv.appendChild(p);
+                });
+            }
+
+            // Display explainxkcd.com explanation
+            if (comic.explainxkcd_explanation) {
+                const h1 = document.createElement('h1');
+                h1.textContent = 'explainxkcd.com Explanation';
+                const p = document.createElement('p');
+                p.textContent = comic.explainxkcd_explanation || '';
+                explanationsDiv.appendChild(h1);
+                explanationsDiv.appendChild(p);
+            }
+        }
+
+        // Navigation function
+        function navigate(action) {
+            if (action === 'first') {
+                currentIndex = 0;
+            } else if (action === 'prev') {
+                if (currentIndex > 0) currentIndex--;
+            } else if (action === 'next') {
+                if (currentIndex < xkcdData.length - 1) currentIndex++;
+            } else if (action === 'last') {
+                currentIndex = xkcdData.length - 1;
+            }
+            displayComic(currentIndex);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
