@@ -101,11 +101,16 @@
             try {
                 // Fetch the JSON files from the FastAPI server
                 const [infoResponse, explanationsResponse, openaiResponse, anthropicResponse, googleResponse] = await Promise.all([
-                    fetch('/json/xkcd_comic.json'),
-                    fetch('/json/xkcd_explanations.json'),
-                    fetch('/json/openai_responses.json'),
-                    fetch('/json/anthropic_responses.json'),
-                    fetch('/json/google_responses.json')
+                    // fetch('/json/xkcd_comic.json'),
+                    // fetch('/json/xkcd_explanations.json'),
+                    // fetch('/json/openai_responses.json'),
+                    // fetch('/json/anthropic_responses.json'),
+                    // fetch('/json/google_responses.json')
+                    fetch('outputs/json/xkcd_comic.json'),
+                    fetch('outputs/json/xkcd_explanations.json'),
+                    fetch('outputs/json/openai_responses.json'),
+                    fetch('outputs/json/anthropic_responses.json'),
+                    fetch('outputs/json/google_responses.json')
                 ]);
 
                 const [xkcdInfo, xkcdExplanations, openaiResponses, anthropicResponses, googleResponses] = await Promise.all([
