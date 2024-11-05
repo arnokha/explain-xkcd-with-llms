@@ -1,0 +1,5 @@
+Pillow
+pandas
+openai
+anthropic
+google-generativeai

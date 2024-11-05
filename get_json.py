@@ -1,6 +1,6 @@
+# Generate json for html
 import pandas as pd
 import os
-import json
 import re
 
 def extract_comic_index(url):
