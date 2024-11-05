@@ -18,8 +18,11 @@
             margin: 0 20px;
             font-size: 1.5em;
         }
-
-        /* Only apply cursor:pointer to navigation arrows, not the date */
+        /* Set a smaller font size for the RANDOM button */
+        #navigation span#random {
+            font-size: 1em;
+        }
+        /* Navigation buttons with cursor pointer */
         #navigation span#first,
         #navigation span#prev,
         #navigation span#next,
@@ -27,15 +30,16 @@
         #navigation span#random {
             cursor: pointer;
         }
-
-        #navigation #date {
-            margin: 0 20px;
-            font-size: 1em;
-        }
-
-        .disabled {
+        /* Override cursor style when disabled */
+        #navigation span.disabled {
             color: grey;
             cursor: default;
+        }
+        /* Style the date in its new position */
+        #date {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 1em;
         }
         #title {
             text-align: center;
@@ -91,11 +95,11 @@
     <div id="navigation">
         <span id="first">&#171;-</span>
         <span id="prev">&#8249;-</span>
-        <span id="date"></span>
         <span id="random">RANDOM</span>
         <span id="next">-&#8250;</span>
         <span id="last">-&#187;</span>
     </div>
+    <div id="date"></div>
     <div id="title"></div>
     <div id="comic-container">
         <img id="comic-image" src="" alt="Comic Image" title="">
@@ -114,7 +118,7 @@
     <script>
         async function fetchJSONData() {
             try {
-                // Fetch the JSON files from the FastAPI server
+                // Fetch the JSON files
                 const [infoResponse, explanationsResponse, openaiResponse, anthropicResponse, googleResponse] = await Promise.all([
                     fetch('outputs/json/xkcd_comic.json'),
                     fetch('outputs/json/xkcd_explanations.json'),
