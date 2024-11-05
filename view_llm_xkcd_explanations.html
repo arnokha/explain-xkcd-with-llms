@@ -16,12 +16,26 @@
         }
         #navigation span {
             margin: 0 20px;
-            cursor: pointer;
             font-size: 1.5em;
         }
+
+        /* Only apply cursor:pointer to navigation arrows, not the date */
+        #navigation span#first,
+        #navigation span#prev,
+        #navigation span#next,
+        #navigation span#last,
+        #navigation span#random {
+            cursor: pointer;
+        }
+
         #navigation #date {
             margin: 0 20px;
             font-size: 1em;
+        }
+
+        .disabled {
+            color: grey;
+            cursor: default;
         }
         #title {
             text-align: center;
@@ -78,6 +92,7 @@
         <span id="first">&#171;-</span>
         <span id="prev">&#8249;-</span>
         <span id="date"></span>
+        <span id="random">RANDOM</span>
         <span id="next">-&#8250;</span>
         <span id="last">-&#187;</span>
     </div>
@@ -101,11 +116,6 @@
             try {
                 // Fetch the JSON files from the FastAPI server
                 const [infoResponse, explanationsResponse, openaiResponse, anthropicResponse, googleResponse] = await Promise.all([
-                    // fetch('/json/xkcd_comic.json'),
-                    // fetch('/json/xkcd_explanations.json'),
-                    // fetch('/json/openai_responses.json'),
-                    // fetch('/json/anthropic_responses.json'),
-                    // fetch('/json/google_responses.json')
                     fetch('outputs/json/xkcd_comic.json'),
                     fetch('outputs/json/xkcd_explanations.json'),
                     fetch('outputs/json/openai_responses.json'),
@@ -194,6 +204,7 @@
             document.getElementById('prev').addEventListener('click', () => navigate('prev'));
             document.getElementById('next').addEventListener('click', () => navigate('next'));
             document.getElementById('last').addEventListener('click', () => navigate('last'));
+            document.getElementById('random').addEventListener('click', () => navigate('random'));
         }
 
         // Display the comic and explanations at the current index
@@ -214,8 +225,10 @@
             const explanationsDiv = document.getElementById('explanations');
             explanationsDiv.innerHTML = '';
 
-            // Display LLM explanations
+            // Shuffle the explanations array
             if (comic.llm_explanations) {
+                comic.llm_explanations.sort(() => Math.random() - 0.5);
+
                 comic.llm_explanations.forEach(exp => {
                     const h1 = document.createElement('h1');
                     h1.textContent = `${exp.provider} Explanation`;
@@ -235,20 +248,59 @@
                 explanationsDiv.appendChild(h1);
                 explanationsDiv.appendChild(p);
             }
+
+            // Update navigation arrows
+            const first = document.getElementById('first');
+            const prev = document.getElementById('prev');
+            const next = document.getElementById('next');
+            const last = document.getElementById('last');
+
+            if (index === 0) {
+                first.classList.add('disabled');
+                prev.classList.add('disabled');
+            } else {
+                first.classList.remove('disabled');
+                prev.classList.remove('disabled');
+            }
+
+            if (index === xkcdData.length - 1) {
+                next.classList.add('disabled');
+                last.classList.add('disabled');
+            } else {
+                next.classList.remove('disabled');
+                last.classList.remove('disabled');
+            }
         }
 
         // Navigation function
         function navigate(action) {
             if (action === 'first') {
-                currentIndex = 0;
+                if (currentIndex !== 0) {
+                    currentIndex = 0;
+                    displayComic(currentIndex);
+                }
             } else if (action === 'prev') {
-                if (currentIndex > 0) currentIndex--;
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    displayComic(currentIndex);
+                }
             } else if (action === 'next') {
-                if (currentIndex < xkcdData.length - 1) currentIndex++;
+                if (currentIndex < xkcdData.length - 1) {
+                    currentIndex++;
+                    displayComic(currentIndex);
+                }
             } else if (action === 'last') {
-                currentIndex = xkcdData.length - 1;
+                if (currentIndex !== xkcdData.length - 1) {
+                    currentIndex = xkcdData.length - 1;
+                    displayComic(currentIndex);
+                }
+            } else if (action === 'random') {
+                const randomIndex = Math.floor(Math.random() * xkcdData.length);
+                if (randomIndex !== currentIndex) {
+                    currentIndex = randomIndex;
+                    displayComic(currentIndex);
+                }
             }
-            displayComic(currentIndex);
         }
 
         window.onload = init;
