@@ -83,7 +83,7 @@
     </div>
     <div id="title"></div>
     <div id="comic-container">
-        <img id="comic-image" src="" alt="Comic Image">
+        <img id="comic-image" src="" alt="Comic Image" title="">
     </div>
     <div id="mouseover-text"></div>
     <div id="links">
@@ -205,6 +205,7 @@
             document.getElementById('title').textContent = comic.title || '';
             document.getElementById('comic-image').src = comic.img || '';
             document.getElementById('comic-image').alt = comic.title || '';
+            document.getElementById('comic-image').title = comic.alt || '';
             document.getElementById('mouseover-text').textContent = comic.alt || '';
             document.getElementById('xkcd-link').href = comic.xkcd_url || '';
             document.getElementById('explainxkcd-link').href = comic.explainxkcd_url || '';
