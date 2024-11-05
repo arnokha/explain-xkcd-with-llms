@@ -6,7 +6,7 @@ import re
 import pandas as pd
 import logging
 from custom_logging import get_logger_with_level
-from typing import List, Dict
+from typing import Dict
 from pathlib import Path
 
 from openai import AsyncOpenAI
