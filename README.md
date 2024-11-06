@@ -1,6 +1,6 @@
 # explain-xkcd-with-llms
 
-## Github page for viewing explanations
+## GitHub page for viewing explanations
 [View LLM explanations for XKCDs](https://arnokha.github.io/explain-xkcd-with-llms/view_llm_xkcd_explanations.html)
 
 # Running the scripts
